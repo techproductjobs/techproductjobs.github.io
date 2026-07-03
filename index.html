@@ -133,31 +133,6 @@
       margin: 0;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .stat {
-      background: var(--cp-surface);
-      border: 1px solid var(--cp-border);
-      border-radius: 0.625rem;
-      padding: 14px;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 1.55rem;
-      letter-spacing: -0.03em;
-    }
-
-    .stat span {
-      color: var(--cp-text-muted);
-      font-size: 0.85rem;
-    }
-
     .toolbar {
       display: grid;
       grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(150px, 190px));
@@ -325,10 +300,6 @@
     }
 
     @media (max-width: 980px) {
-      .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .toolbar {
         grid-template-columns: 1fr 1fr;
       }
@@ -339,7 +310,6 @@
         padding: 20px 12px 40px;
       }
 
-      .stats,
       .toolbar {
         grid-template-columns: 1fr;
       }
@@ -354,14 +324,10 @@
   <main class="page">
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-content">
-        <h1 id="page-title">Product company career pages</h1>
+        <h1 id="page-title">Tech Product Jobs</h1>
         <p class="subtitle">
-          A city-aware launchpad for high-paying product and platform companies. Career links open with the selected city, India, and software/engineering filters prefilled where the company career site supports deep links.
+          Curated career links for product companies, with filters to get you to relevant jobs faster.
         </p>
-        <div class="stats" aria-label="Summary">
-          <div class="stat"><strong id="company-count">0</strong><span>companies shown</span></div>
-          <div class="stat"><strong id="city-count">0</strong><span>cities configured</span></div>
-        </div>
       </div>
     </section>
 
@@ -526,7 +492,6 @@
       tableBody.replaceChildren(...filtered.map(row));
       tableShell.style.display = filtered.length ? "block" : "none";
       empty.style.display = filtered.length ? "none" : "block";
-      document.querySelector("#company-count").textContent = filtered.length;
     }
 
     search.addEventListener("input", event => {
@@ -553,7 +518,6 @@
       tableShell.style.display = "none";
       loadError.style.display = "block";
     } else {
-      document.querySelector("#city-count").textContent = unique(companies.flatMap(companyCities)).length;
       initFilters();
       render();
     }

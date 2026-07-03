@@ -341,6 +341,28 @@
       z-index: 1;
     }
 
+    .sort-button {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      color: var(--cp-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: inherit;
+      font-weight: 700;
+      gap: 6px;
+      letter-spacing: inherit;
+      min-height: auto;
+      padding: 0;
+      text-transform: inherit;
+      width: auto;
+    }
+
+    .sort-button:hover {
+      color: var(--cp-text);
+    }
+
     tbody tr:hover {
       background: var(--cp-accent-soft);
     }
@@ -476,7 +498,7 @@
         <caption>Product company career pages and filtered job-search links</caption>
         <thead>
           <tr>
-            <th>Company</th>
+            <th><button class="sort-button" id="companySort" type="button" aria-label="Sort by company name">Company <span id="companySortIndicator">A-Z</span></button></th>
             <th>Category</th>
             <th>Cities</th>
             <th>Notes</th>
@@ -503,6 +525,7 @@
       city: "Hyderabad",
       tier: "all",
       categories: [],
+      sortDirection: "asc",
       tab: "all"
     };
 
@@ -514,6 +537,8 @@
     const categoryOptions = document.querySelector("#categoryOptions");
     const selectAllCategories = document.querySelector("#selectAllCategories");
     const clearCategories = document.querySelector("#clearCategories");
+    const companySort = document.querySelector("#companySort");
+    const companySortIndicator = document.querySelector("#companySortIndicator");
     const tabs = document.querySelector("#tabs");
     const tableBody = document.querySelector("#companies");
     const empty = document.querySelector("#empty");
@@ -592,7 +617,6 @@
 
       const quickFilters = [
         { label: "All", value: "all" },
-        { label: "Hyderabad", value: "Hyderabad" },
         { label: "Global top pay", value: "Global top pay" },
         { label: "Cloud and AI", value: "Cloud" },
         { label: "Security", value: "Security" },
@@ -660,11 +684,18 @@
     }
 
     function render() {
-      const filtered = companies.filter(matches);
+      const filtered = companies
+        .filter(matches)
+        .sort((first, second) => {
+          const result = first.name.localeCompare(second.name);
+          return state.sortDirection === "asc" ? result : -result;
+        });
       document.querySelectorAll(".tab").forEach(button => {
         button.classList.toggle("active", button.dataset.value === state.tab);
       });
       updateCategorySummary();
+      companySortIndicator.textContent = state.sortDirection === "asc" ? "A-Z" : "Z-A";
+      companySort.setAttribute("aria-sort", state.sortDirection === "asc" ? "ascending" : "descending");
 
       tableBody.replaceChildren(...filtered.map(row));
       tableShell.style.display = filtered.length ? "block" : "none";
@@ -698,6 +729,11 @@
 
     clearCategories.addEventListener("click", () => {
       setCategorySelection([]);
+      render();
+    });
+
+    companySort.addEventListener("click", () => {
+      state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
       render();
     });
 

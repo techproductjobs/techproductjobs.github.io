@@ -4,6 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tech Product Jobs</title>
+  <meta name="description" content="Curated career links for product companies, with filters for city, category, and high-quality tech roles in India.">
+  <meta name="keywords" content="tech product jobs, product company jobs, software engineering jobs, Hyderabad jobs, India tech jobs, product engineering careers">
+  <meta name="author" content="Tech Product Jobs">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://techproductjobs.github.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Tech Product Jobs">
+  <meta property="og:description" content="Curated career links for product companies, with filters to help candidates find relevant tech roles faster.">
+  <meta property="og:url" content="https://techproductjobs.github.io/">
+  <meta property="og:site_name" content="Tech Product Jobs">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Tech Product Jobs">
+  <meta name="twitter:description" content="Curated career links for product companies, with filters to help candidates find relevant tech roles faster.">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Tech Product Jobs",
+      "url": "https://techproductjobs.github.io/",
+      "description": "Curated career links for product companies, with filters for city, category, and tech roles.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://techproductjobs.github.io/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
   <script>
     (() => {
       const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -161,9 +188,100 @@
 
     input:focus,
     select:focus,
-    button:focus {
+    button:focus,
+    summary:focus {
       outline: 2px solid var(--cp-accent);
       outline-offset: 2px;
+    }
+
+    .category-dropdown {
+      position: relative;
+      width: 100%;
+    }
+
+    .category-dropdown summary {
+      align-items: center;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      cursor: pointer;
+      display: flex;
+      font: inherit;
+      justify-content: space-between;
+      list-style: none;
+      min-height: 44px;
+      padding: 0 12px;
+    }
+
+    .category-dropdown summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .category-dropdown summary::after {
+      content: "▾";
+      color: var(--cp-text-muted);
+      font-size: 0.9rem;
+      margin-left: 8px;
+    }
+
+    .category-dropdown[open] summary::after {
+      content: "▴";
+    }
+
+    .category-options {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+      left: 0;
+      max-height: 280px;
+      overflow: auto;
+      padding: 8px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      z-index: 10;
+    }
+
+    .category-actions {
+      border-bottom: 1px solid var(--cp-border);
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding: 0 0 8px;
+    }
+
+    .category-action {
+      background: var(--cp-surface-soft);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+      min-height: 32px;
+      padding: 0 10px;
+      width: auto;
+    }
+
+    .category-option {
+      align-items: center;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .category-option:hover {
+      background: var(--cp-accent-soft);
+    }
+
+    .category-option input {
+      min-height: auto;
+      padding: 0;
+      width: auto;
     }
 
     .tabs {
@@ -257,7 +375,7 @@
     .actions {
       display: flex;
       gap: 8px;
-      min-width: 96px;
+      min-width: 72px;
     }
 
     .button {
@@ -339,9 +457,16 @@
       <select id="tier" aria-label="Filter by pay tier">
         <option value="all">All pay tiers</option>
       </select>
-      <select id="category" aria-label="Filter by category">
-        <option value="all">All categories</option>
-      </select>
+      <details class="category-dropdown" id="categoryDropdown">
+        <summary id="categorySummary">All categories</summary>
+        <div class="category-options" role="group" aria-label="Filter by categories">
+          <div class="category-actions">
+            <button class="category-action" id="selectAllCategories" type="button">Select all</button>
+            <button class="category-action" id="clearCategories" type="button">Clear</button>
+          </div>
+          <div id="categoryOptions"></div>
+        </div>
+      </details>
     </section>
 
     <div class="tabs" id="tabs" aria-label="Quick filters"></div>
@@ -355,7 +480,7 @@
             <th>Category</th>
             <th>Cities</th>
             <th>Notes</th>
-            <th>Links</th>
+            <th>Career Page</th>
           </tr>
         </thead>
         <tbody id="companies"></tbody>
@@ -377,14 +502,18 @@
       query: "",
       city: "Hyderabad",
       tier: "all",
-      category: "all",
+      categories: [],
       tab: "all"
     };
 
     const search = document.querySelector("#search");
     const city = document.querySelector("#city");
     const tier = document.querySelector("#tier");
-    const category = document.querySelector("#category");
+    const categoryDropdown = document.querySelector("#categoryDropdown");
+    const categorySummary = document.querySelector("#categorySummary");
+    const categoryOptions = document.querySelector("#categoryOptions");
+    const selectAllCategories = document.querySelector("#selectAllCategories");
+    const clearCategories = document.querySelector("#clearCategories");
     const tabs = document.querySelector("#tabs");
     const tableBody = document.querySelector("#companies");
     const empty = document.querySelector("#empty");
@@ -414,13 +543,52 @@
       return Array.isArray(company.cities) && company.cities.length ? company.cities : ["Hyderabad"];
     }
 
+    function categoryWords(company) {
+      return company.category
+        .split(",")
+        .map(value => value.trim())
+        .filter(Boolean);
+    }
+
+    function selectedCategories() {
+      return [...categoryOptions.querySelectorAll("input:checked")].map(input => input.value);
+    }
+
+    function setCategorySelection(values) {
+      const selected = new Set(values);
+      categoryOptions.querySelectorAll("input[type='checkbox']").forEach(input => {
+        input.checked = selected.has(input.value);
+      });
+      state.categories = selectedCategories();
+    }
+
+    function allCategoryValues() {
+      return [...categoryOptions.querySelectorAll("input[type='checkbox']")].map(input => input.value);
+    }
+
+    function updateCategorySummary() {
+      if (state.categories.length === 0) {
+        categorySummary.textContent = "All categories";
+      } else if (state.categories.length === 1) {
+        categorySummary.textContent = state.categories[0];
+      } else {
+        categorySummary.textContent = `${state.categories.length} categories`;
+      }
+    }
+
     function initFilters() {
       unique(companies.flatMap(companyCities)).forEach(value => city.appendChild(option(value)));
       city.value = unique(companies.flatMap(companyCities)).includes(state.city) ? state.city : "all";
       state.city = city.value;
 
       tierOrder.forEach(value => tier.appendChild(option(value)));
-      unique(companies.map(company => company.category)).forEach(value => category.appendChild(option(value)));
+      const categoryValues = unique(companies.flatMap(categoryWords));
+      categoryValues.forEach(value => {
+        const label = document.createElement("label");
+        label.className = "category-option";
+        label.innerHTML = `<input type="checkbox" value="${escapeHtml(value)}"> <span>${escapeHtml(value)}</span>`;
+        categoryOptions.appendChild(label);
+      });
 
       const quickFilters = [
         { label: "All", value: "all" },
@@ -439,6 +607,11 @@
         button.dataset.value = filter.value;
         button.textContent = filter.label;
         button.addEventListener("click", () => {
+          if (filter.value === "all") {
+            setCategorySelection([]);
+          } else if (categoryValues.includes(filter.value)) {
+            setCategorySelection([filter.value]);
+          }
           state.tab = filter.value;
           render();
         });
@@ -452,7 +625,10 @@
       const queryMatch = !state.query || text.includes(state.query);
       const cityMatch = state.city === "all" || cities.includes(state.city);
       const tierMatch = state.tier === "all" || company.tier === state.tier;
-      const categoryMatch = state.category === "all" || company.category === state.category;
+      const companyCategoryWords = categoryWords(company);
+      const categoryMatch =
+        state.categories.length === 0 ||
+        state.categories.some(value => companyCategoryWords.includes(value));
       const tabMatch =
         state.tab === "all" ||
         cities.includes(state.tab) ||
@@ -476,7 +652,7 @@
         <td class="note">${escapeHtml(company.note)}</td>
         <td>
           <div class="actions">
-            <a class="button" href="${escapeHtml(company.link)}" target="_blank" rel="noopener noreferrer">Open jobs</a>
+            <a class="button" href="${escapeHtml(company.link)}" target="_blank" rel="noopener noreferrer">Link</a>
           </div>
         </td>
       `;
@@ -488,6 +664,7 @@
       document.querySelectorAll(".tab").forEach(button => {
         button.classList.toggle("active", button.dataset.value === state.tab);
       });
+      updateCategorySummary();
 
       tableBody.replaceChildren(...filtered.map(row));
       tableShell.style.display = filtered.length ? "block" : "none";
@@ -509,9 +686,25 @@
       render();
     });
 
-    category.addEventListener("change", event => {
-      state.category = event.target.value;
+    categoryOptions.addEventListener("change", () => {
+      state.categories = selectedCategories();
       render();
+    });
+
+    selectAllCategories.addEventListener("click", () => {
+      setCategorySelection(allCategoryValues());
+      render();
+    });
+
+    clearCategories.addEventListener("click", () => {
+      setCategorySelection([]);
+      render();
+    });
+
+    document.addEventListener("click", event => {
+      if (!categoryDropdown.contains(event.target)) {
+        categoryDropdown.removeAttribute("open");
+      }
     });
 
     if (!companies.length) {
@@ -519,6 +712,11 @@
       loadError.style.display = "block";
     } else {
       initFilters();
+      const initialQuery = new URLSearchParams(window.location.search).get("q");
+      if (initialQuery) {
+        search.value = initialQuery;
+        state.query = initialQuery.trim().toLowerCase();
+      }
       render();
     }
   </script>
